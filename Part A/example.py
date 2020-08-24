@@ -16,23 +16,29 @@ index, time, range_, velocity_command, raw_ir1, raw_ir2, raw_ir3, raw_ir4, sonar
 # Plot true range and sonar measurements over time
 plt.figure(figsize=(12, 4))
 
-plt.subplot(131)
+plt.subplot(141)
 plt.plot(time, range_)
 plt.xlabel('Time (s)')
 plt.ylabel('Range (m)')
 plt.title('True range')
 
-plt.subplot(132)
+plt.subplot(142)
 plt.plot(time, sonar1, '.', alpha=0.2)
 plt.plot(time, range_)
 plt.title('Sonar1')
 plt.xlabel('Time (s)')
 
-plt.subplot(133)
+plt.subplot(143)
 plt.plot(time, sonar2, '.', alpha=0.2)
 plt.plot(time, range_)
 plt.title('Sonar2')
 plt.xlabel('Time (s)')
+
+plt.subplot(144)
+plt.plot(range_, raw_ir3, '.', alpha=0.5)
+plt.title('IR3')
+plt.xlabel('Range (m)')
+plt.ylabel('Measurement (V)')
 
 
 # Plot sonar error
