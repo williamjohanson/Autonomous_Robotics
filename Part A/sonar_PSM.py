@@ -126,15 +126,36 @@ def PDF(fil_range_sonar1, fil_range_sonar2, fil_values_sonar1, fil_values_sonar2
 
 ###################################################################################################
 
-def plotting(fil_range_sonar1, fil_range_sonar2, fil_time_sonar1, fil_time_sonar2, fil_values_sonar1, fil_values_sonar2, f_v_sonar1, f_v_sonar2, time, range_, sonar1):
+def linear_least_squares(fil_range_sonar1, fil_range_sonar2, fil_values_sonar1, fil_values_sonar2):
+    """ Determine the variables c and d from Z=cX+d+f_v(x). """
+
+    Y_1 = fil_range_sonar1
+    Y_2 = fil_range_sonar2
+    
+    A_1 = np.transpose(np.array([np.ones(len(fil_values_sonar1), dtype=int), fil_values_sonar1]))
+    A_2 = np.transpose(np.array([np.ones(len(fil_values_sonar2), dtype=int), fil_values_sonar2]))
+
+    trans_A_1 = np.transpose(A_1)
+    trans_A_2 = np.transpose(A_2)
+
+    theta_1 = np.dot(np.dot(np.linalg.inv(np.dot(trans_A_1, A_1)), trans_A_1), Y_1)
+    theta_2 = np.dot(np.dot(np.linalg.inv(np.dot(trans_A_2, A_2)), trans_A_2), Y_2)
+
+
+    return theta_1, theta_2
+
+###################################################################################################
+
+def plotting(fil_range_sonar1, fil_range_sonar2, fil_time_sonar1, fil_time_sonar2, fil_values_sonar1, fil_values_sonar2, f_v_sonar1, f_v_sonar2, time, range_, sonar1, determined_z_1, determined_z_2):
     """ Plot some results. """
     # Plot filtered data.
     plt.subplot(121)
-    plt.plot(fil_range_sonar1, fil_values_sonar1,'.', alpha=0.2)
+    plt.plot(fil_range_sonar1, fil_values_sonar1,'.', alpha=0.2, color='b')
+    plt.plot(fil_range_sonar1,determined_z_1, '.', alpha=0.2, color='y')
 
     plt.subplot(122)
-    plt.plot(fil_range_sonar2, fil_values_sonar2,'.', alpha=0.2)
-
+    plt.plot(fil_range_sonar2, fil_values_sonar2,'.', alpha=0.2, color='b')
+    plt.plot(fil_range_sonar2,determined_z_2, '.', alpha=0.2, color='y')
 
     # Plot true range and sonar measurements over time
     plt.figure(figsize=(12, 4))
@@ -187,10 +208,26 @@ def main():
 
     f_v_sonar1, f_v_sonar2 = PDF(fil_range_sonar1, fil_range_sonar2, fil_values_sonar1, fil_values_sonar2)    
 
-    plotting(fil_range_sonar1, fil_range_sonar2, fil_time_sonar1, fil_time_sonar2, fil_values_sonar1, fil_values_sonar2, f_v_sonar1, f_v_sonar2, time, range_, sonar1)
+    theta_1, theta_2 = linear_least_squares(fil_range_sonar1, fil_range_sonar2, fil_values_sonar1, fil_values_sonar2)
 
-    for z in fil_range_sonar1:
-        for x in fil_values_sonar1:
-            
+    print(theta_1, theta_2)
+
+    determined_z_1 = []
+    determined_z_2 = []
+
+    for i in range(0, len(fil_values_sonar1)):
+        determined_z_1.append(theta_1[0] + theta_1[1] * fil_values_sonar1[i] + f_v_sonar1[i])
+
+    for i in range(0, len(fil_values_sonar2)):
+        determined_z_2.append(theta_2[0] + theta_2[1] * fil_values_sonar2[i] + f_v_sonar2[i])
+
+
+    plotting(fil_range_sonar1, fil_range_sonar2, fil_time_sonar1, fil_time_sonar2, fil_values_sonar1, 
+    fil_values_sonar2, f_v_sonar1, f_v_sonar2, time, range_, sonar1, determined_z_1, determined_z_2)
+
+    
+
+    
+
 
 main()
