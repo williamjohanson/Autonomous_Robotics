@@ -3,6 +3,7 @@
 ###################################################################################################
 
 """ Code setup. """
+
 # Imports
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,7 +17,6 @@ index, time, range_, velocity_command, raw_ir1, raw_ir2, raw_ir3, raw_ir4, sonar
 
 # Convert into np arrays for ease.
 range_ = np.array(range_)
-raw_ir3 = np.array(raw_ir3)
 sonar1 = np.array(sonar1)
 sonar2 = np.array(sonar2)
 
@@ -52,7 +52,7 @@ filtered_sonar2 = dict()
 i = 0
 for M in M_sonar1:
     if abs(M) <= 3.5:
-        filtered_sonar1[range_[i]] = sonar1[i]
+        filtered_sonar1[(range_[i], time[i])] = sonar1[i]
     else:
         None
     i += 1
@@ -60,44 +60,70 @@ for M in M_sonar1:
 i = 0
 for M in M_sonar2:
     if abs(M) <= 3.5:
-        filtered_sonar2[range_[i]] = sonar2[i]
+        filtered_sonar2[(range_[i], time[i])] = sonar2[i]
     else:
         None
     i += 1
 
+filtered_range_sonar1 = []
+filtered_time_sonar1 = []
+filtered_values_sonar1 = []
+
+for (range_, time), values_sonar1 in filtered_sonar1.items():
+    filtered_range_sonar1.append(range_)
+    filtered_time_sonar1.append(time)
+    filtered_values_sonar1.append(values_sonar1)
+
+filtered_range_sonar2 = []
+filtered_time_sonar2 = []
+filtered_values_sonar2 = []
+
+for (range_, time), values_sonar2 in filtered_sonar2.items():
+    filtered_range_sonar2.append(range_)
+    filtered_time_sonar2.append(time)
+    filtered_values_sonar2.append(values_sonar2)
 
 ###################################################################################################
 
-# Determine likelihoods.
-mean_raw_ir3 = sum(raw_ir3 - range_) / len(raw_ir3)
-mean_sonar1 = sum(filtered_sonar1.values() - filtered_sonar1.keys()) / len(filtered_sonar1.values())
-mean_sonar2 = sum(filtered_sonar2.values() - filtered_sonar2.keys()) / len(filtered_sonar2.values())
+""" Work out the PDF's (mean and variance). """
 
-var_raw_ir3_array = []
+# Determine likelihoods.
+mean_sonar1 = sum(np.array(filtered_values_sonar1) - np.array(filtered_range_sonar1)) / len(filtered_range_sonar1)
+mean_sonar2 = sum(np.array(filtered_values_sonar2) - np.array(filtered_range_sonar2)) / len(filtered_range_sonar2)
+
 var_sonar1_array = []
 var_sonar2_array = []
 
-for i in range(0, len(range_)):
-    var_raw_ir3_array.append((raw_ir3[i] - mean_raw_ir3) ** 2)
-    var_sonar1_array.append((filtered_sonar1.values()[i] - mean_sonar1) ** 2) 
-    var_sonar2_array.append((filtered_sonar1.values()[i] - mean_sonar2) ** 2)
+for val in filtered_values_sonar1:
+    var_sonar1_array.append((val - mean_sonar1) ** 2)
 
-var_raw_ir3 = sum(var_raw_ir3_array) / len(var_raw_ir3_array)
+for val in filtered_values_sonar2:
+    var_sonar2_array.append((val - mean_sonar2) ** 2)
+
 var_sonar1 = sum(var_sonar1_array) / len(var_sonar1_array)
 var_sonar2 = sum(var_sonar2_array) / len(var_sonar2_array)
 
-print("{}:{}\n{}:{}\n{}:{}\n".format(mean_raw_ir3,var_raw_ir3,mean_sonar1,var_sonar1,mean_sonar2,var_sonar2))
+print("{}:{}\n{}:{}\n".format(mean_sonar1,var_sonar1,mean_sonar2,var_sonar2))
 
-f_v_raw_ir3 = (1 / (2 * np.pi * var_raw_ir3)) * np.exp((-1/2) * ((raw_ir3 - mean_raw_ir3) ** 2) / (var_raw_ir3))
-f_v_sonar1 = (1 / (2 * np.pi * var_sonar1)) * np.exp((-1/2) * ((sonar1 - mean_sonar1) ** 2) / (var_sonar1))
-f_v_sonar2 = (1 / (2 * np.pi * var_sonar2)) * np.exp((-1/2) * ((sonar2 - mean_sonar2) ** 2) / (var_sonar2))
+f_v_sonar1 = []
+f_v_sonar2 = []
+
+for val in filtered_values_sonar1:
+    f_v_sonar1.append((1 / (2 * np.pi * var_sonar1)) * np.exp((-1/2) * ((val - mean_sonar1) ** 2) / (var_sonar1)))
+
+for val in filtered_values_sonar2:
+    f_v_sonar2.append((1 / (2 * np.pi * var_sonar2)) * np.exp((-1/2) * ((val - mean_sonar2) ** 2) / (var_sonar2)))
+
+###################################################################################################
+
+""" Plotting. """
 
 # Plot filtered data.
 plt.subplot(121)
-plt.plot(filtered_sonar1.keys(), filtered_sonar1.values(),'.', alpha=0.2)
+plt.plot(filtered_range_sonar1, filtered_values_sonar1,'.', alpha=0.2)
 
 plt.subplot(122)
-plt.plot(filtered_sonar2.keys(), filtered_sonar2.values(),'.', alpha=0.2)
+plt.plot(filtered_range_sonar2, filtered_values_sonar2,'.', alpha=0.2)
 
 
 # Plot true range and sonar measurements over time
@@ -110,43 +136,30 @@ plt.ylabel('Range (m)')
 plt.title('True range')
 
 plt.subplot(142)
-plt.plot(time, sonar1, '.', alpha=0.2)
+plt.plot(filtered_time_sonar1, filtered_values_sonar1, '.', alpha=0.2)
 plt.plot(time, range_)
 plt.title('Sonar1')
 plt.xlabel('Time (s)')
 
 plt.subplot(143)
-plt.plot(time, sonar2, '.', alpha=0.2)
+plt.plot(filtered_time_sonar2, filtered_values_sonar2, '.', alpha=0.2)
 plt.plot(time, range_)
 plt.title('Sonar2')
 plt.xlabel('Time (s)')
 
-plt.subplot(144)
-plt.plot(range_, raw_ir3, '.', alpha=0.5)
-plt.title('IR3')
-plt.xlabel('Range (m)')
-plt.ylabel('Measurement (V)')
-plt.show()
 
+# Plot PDFs against filtered data
 plt.figure(figsize=(12, 4))
 
-plt.subplot(131)
-plt.plot(raw_ir3, f_v_raw_ir3)
-plt.xlabel('IR3 Raw Data')
-plt.ylabel('PDF')
-plt.title('IR3 PDF')
-
-
-plt.subplot(132)
-plt.plot(sonar1, f_v_sonar1)
-plt.xlabel('Sonar 1 Raw Data')
+plt.subplot(121)
+plt.plot(filtered_values_sonar1, f_v_sonar1)
+plt.xlabel('Sonar 1 Filtered Data')
 plt.ylabel('PDF')
 plt.title('Sonar 1 PDF')
 
-
-plt.subplot(133)
-plt.plot(sonar2, f_v_sonar2)
-plt.xlabel('Sonar 2 Raw Data')
+plt.subplot(122)
+plt.plot(filtered_values_sonar2, f_v_sonar2)
+plt.xlabel('Sonar 2 Filtered Data')
 plt.ylabel('PDF')
 plt.title('Sonar 2 PDF')
 
