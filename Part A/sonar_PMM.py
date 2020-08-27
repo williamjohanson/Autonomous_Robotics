@@ -1,4 +1,6 @@
-""" Determine the probability motion model (PMM) for the sonars. """
+""" Sonar Probability Motion Model (PMM) Code for ENMT482 assignment - Part A. 
+
+Xn = Xn-1 + un * deltaT + Wn"""
 
 ###################################################################################################
 
@@ -13,67 +15,28 @@ import matplotlib.pyplot as plt
 def get_data():
     """ Get the calibration data. """
     # Load data
-    filename1 = 'Part A/training1.csv'
-    data1 = np.loadtxt(filename1, delimiter=',', skiprows=1)
-    filename2 = 'Part A/training2.csv'
-    data2 = np.loadtxt(filename2, delimiter=',', skiprows=1)
+    filename = 'Part A/training1.csv'
+    data = np.loadtxt(filename, delimiter=',', skiprows=1)
 
     # Split into columns
-    index_1, time_1, range_1, velocity_command_1, raw_ir1_1, raw_ir2_1, raw_ir3_1, raw_ir4_1, sonar1_1, sonar2_1 = data1.T
-    index_2, time_2, range_2, velocity_command_2, raw_ir1_2, raw_ir2_2, raw_ir3_2, raw_ir4_2, sonar1_2, sonar2_2 = data2.T
+    _, time, range_, velocity_command, _, _, _, _, sonar1, sonar2 = data.T
 
     # Convert into np arrays for ease.
-    time1 = np.array(time_1)
-    range_1 = np.array(range_1)
-    velocity_command_1 = np.array(velocity_command_1)
-    sonar1_1 = np.array(sonar1_1)
-    sonar2_1 = np.array(sonar2_1)
-    time2 = np.array(time_2)
-    range_2 = np.array(range_2)
-    velocity_command_2 = np.array(velocity_command_2)
-    sonar1_2 = np.array(sonar1_2)
-    sonar2_2 = np.array(sonar2_2)
-    
+    time = np.array(time)
+    range_ = np.array(range_)
+    velocity_command = np.array(velocity_command)
+    sonar1 = np.array(sonar1)
+    sonar2 = np.array(sonar2)
 
 
-    return time1, range_1, velocity_command_1, sonar1_1, sonar2_1, time2, range_2, velocity_command_2, sonar1_2, sonar2_2
-###################################################################################################
-
-def c:
-    """ Convert the data into velocities. v = d/t. """
-    velocity_1 = []
-    velocity_sonar1_1 = []
-    velocity_sonar2_1 = []   
-
-    for i in range(0, len(sonar2_1) - 1):
-        
-        velocity_sonar1_1.append((sonar1_1[i+1] - sonar1_1[i]) / (time1[i+1] - time1[i]))
-
-        velocity_sonar2_1.append((sonar2_1[i+1] - sonar2_1[i]) / (time1[i+1] - time1[i]))
-
-        velocity_1.append((range_1[i+1] - range_1[i]) / (time1[i+1] - time1[i]))
-
-    velocity_2 = []
-    velocity_sonar1_2 = []
-    velocity_sonar2_2 = []
-
-    for i in range(0, len(sonar2_1) - 1):
-        
-        velocity_sonar1_2.append((sonar1_2[i+1] - sonar1_2[i]) / (time2[i+1] - time2[i]))
-
-        velocity_sonar2_2.append((sonar2_2[i+1] - sonar2_2[i]) / (time2[i+1] - time2[i]))
-
-        velocity_2.append((range_2[i+1] - range_2[i]) / (time2[i+1] - time2[i]))
-
-
-    return velocity_1, velocity_sonar1_1, velocity_sonar2_1, velocity_2, velocity_sonar1_2, velocity_sonar2_2
+    return time, range_, velocity_command, sonar1, sonar2
 
 ###################################################################################################
 
-def mod_Z_score(range_, sonar1, sonar2):
+def mod_Z_score(range_, disp_command, sonar1, sonar2):
     """ Determine Iglewicz and Hoaglin's modified Z-score. """
-    sonar1_error = range_ - sonar1
-    sonar2_error = range_ - sonar2
+    sonar1_error = range_ - (sonar1 + disp_command)
+    sonar2_error = range_ - (sonar2 + disp_command)
 
     sorted_sonar1_error = np.sort(sonar1_error)
     sorted_sonar2_error = np.sort(sonar2_error)
@@ -95,62 +58,191 @@ def mod_Z_score(range_, sonar1, sonar2):
 
     return M_sonar1, M_sonar2
 
-def sonar_velocity_filter(time1, range_1, velocity_command_1, velocity_1, velocity_sonar1_1, velocity_sonar2_1, time2, range_2, velocity_command_2, velocity_2, velocity_sonar1_2, velocity_sonar2_2):
+def sonar_filter(time, range_, disp_command, sonar1, sonar2):
     """ Implement a Iglewicz and Hoaglin's modified Z-score filter. """
     # Z-score.
-    M_sonar1, M_sonar2 = mod_Z_score(velocity_1, velocity_sonar1_1, velocity_sonar2_1, velocity_2, velocity_sonar1_2, velocity_sonar2_2)
+    M_sonar1, M_sonar2 = mod_Z_score(range_, disp_command, sonar1, sonar2)
 
     fil_range_sonar1 = []
-    fil_time_sonar1 = []
-    fil_values_sonar1 = []
+    fil_time_sonar1 = []  
+    fil_disp_command_sonar1 = []
+    fil_sonar1 = []
+    
 
     i = 0
     for M in M_sonar1:
         if abs(M) <= 3.5:
             fil_range_sonar1.append(range_[i])
             fil_time_sonar1.append(time[i])
-            fil_values_sonar1.append(sonar1[i])
+            fil_sonar1.append(sonar1[i])
+            fil_disp_command_sonar1.append(disp_command[i])
         else:
             None
         i += 1
 
     fil_range_sonar2 = []
     fil_time_sonar2 = []
-    fil_values_sonar2 = []
+    fil_disp_command_sonar2 = []
+    fil_sonar2 = []
 
     i = 0
     for M in M_sonar2:
         if abs(M) <= 3.5:
             fil_range_sonar2.append(range_[i])
             fil_time_sonar2.append(time[i])
-            fil_values_sonar2.append(sonar2[i])
+            fil_sonar2.append(sonar2[i])
+            fil_disp_command_sonar2.append(disp_command[i])
         else:
             None
         i += 1
 
 
-    return fil_range_sonar1, fil_range_sonar2, fil_time_sonar1, fil_time_sonar2, fil_values_sonar1, fil_values_sonar2
-
+    return fil_range_sonar1, fil_range_sonar2, fil_time_sonar1, fil_time_sonar2, fil_sonar1, fil_sonar2, fil_disp_command_sonar1, fil_disp_command_sonar2
 
 ###################################################################################################
 
-def plotting(time1, time2, velocity_command_1, velocity_command_2, velocity_sonar2_1, velocity_sonar1_1, velocity_1, sonar1_1, sonar2_1, range_1):
-    """ Plot the outputs. """
+def vel_to_disp(time, velocity_command, sonar1):
+    """ Convert the velocity command to displacement. """
+    disp_command = [0]
+
+    for i in range(0, len(sonar1)):
+        try:
+            disp_command.append(velocity_command[i+1] * (time[i+1] - time[i]))
+        except IndexError:
+            None
+
+
+    return disp_command
+
+###################################################################################################
+
+def linear_least_squares(fil_range_sonar1, fil_range_sonar2, fil_sonar1, fil_sonar2, fil_disp_command_sonar1, fil_disp_command_sonar2):
+    """ Determine the variables A and B from Xn=AXn-1+Bun. """
+
+    Y_1 = fil_range_sonar1
+    Y_2 = fil_range_sonar2
+
+    A_1 = np.transpose(np.array([fil_sonar1, fil_disp_command_sonar1]))
+    A_2 = np.transpose(np.array([fil_sonar2, fil_disp_command_sonar2]))
+
+    trans_A_1 = np.transpose(A_1)
+    trans_A_2 = np.transpose(A_2)
+
+    theta_1 = np.dot(np.dot(np.linalg.inv(np.dot(trans_A_1, A_1)), trans_A_1), Y_1)
+    theta_2 = np.dot(np.dot(np.linalg.inv(np.dot(trans_A_2, A_2)), trans_A_2), Y_2)
+
+
+    return theta_1, theta_2
+
+###################################################################################################
+
+def error_PDF(x, x2, x_est, x2_est):
+    """ Work out the PDF's (mean and variance). """
+    # Determine error PDF.
+    error_sonar1 = np.array(x_est) - np.array(x)
+    error_sonar2 = np.array(x2_est) - np.array(x2)
+
+    mean_sonar1 = sum(error_sonar1) / len(error_sonar1)
+    mean_sonar2 = sum(error_sonar2) / len(error_sonar2)
+
+    var_sonar1_array = []
+    var_sonar2_array = []
+
+    for val in error_sonar1:
+        var_sonar1_array.append((val - mean_sonar1) ** 2)
+
+    for val in error_sonar2:
+        var_sonar2_array.append((val - mean_sonar2) ** 2)
+
+    var_sonar1 = sum(var_sonar1_array) / len(var_sonar1_array)
+    var_sonar2 = sum(var_sonar2_array) / len(var_sonar2_array)
+
+    print("{}:{}\n{}:{}\n".format(mean_sonar1,var_sonar1,mean_sonar2,var_sonar2))
+
+    f_v_sonar1_plot = []
+    f_v_sonar2_plot = []
+    f_v_sonar1 = []
+    f_v_sonar2 = []
+
+    x_range = np.linspace(-5,5,1000)
+
+    for val in x_range:
+        f_v_sonar1_plot.append((1 / (2 * np.pi * var_sonar1)) * np.exp((-1/2) * ((val - mean_sonar1) ** 2) / (var_sonar1)))
+
+    for val in x_range:
+        f_v_sonar2_plot.append((1 / np.sqrt(2 * np.pi * var_sonar2)) * np.exp((-1/2) * ((val - mean_sonar2) ** 2) / (var_sonar2)))
+
+    for val in x_est:
+        f_v_sonar1.append((1 / (2 * np.pi * var_sonar1)) * np.exp((-1/2) * ((val - mean_sonar1) ** 2) / (var_sonar1)))
+
+    for val in x2_est:
+        f_v_sonar2.append((1 / np.sqrt(2 * np.pi * var_sonar2)) * np.exp((-1/2) * ((val - mean_sonar2) ** 2) / (var_sonar2)))
+
+
+    return f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range
+
+###################################################################################################
+
+def approximates(fil_sonar1, fil_sonar2, fil_disp_command_sonar1, fil_disp_command_sonar2, theta_1, theta_2):
+    """ Approximate data and determined data for plotting. """
+    #sonar2_min = 0.3 # Min the sonar 2 can see.
+    x = []
+    x_est = []
+    x.append(0)
+    x_est.append(0)
+
+    i = 0
+    for val in fil_sonar1:
+        #if range_[i] > sonar2_min:
+        try:
+            x_new = val + fil_disp_command_sonar1[i+1] 
+            x_est_new = theta_1[0] * val + theta_1[1] * fil_disp_command_sonar1[i+1]
+            x.append(x_new)
+            x_est.append(x_est_new)
+            i += 1
+        except IndexError:
+            None
+
+    x2 = []
+    x2_est = []
+    x2.append(0)
+    x2_est.append(0)
+    j = 0
+    for val in fil_sonar2:
+        #if range_[i] > sonar2_min:
+        try:
+            x2_new = val + fil_disp_command_sonar2[j+1] 
+            x2_est_new = theta_2[0] * val + theta_2[1] * fil_disp_command_sonar2[j+1]
+            x2.append(x2_new)
+            x2_est.append(x2_est_new)
+            j += 1
+        except IndexError:
+            None
+
+
+    return x, x2, x_est, x2_est
+
+###################################################################################################
+
+def plotting(time, fil_time_sonar1, fil_time_sonar2, range_, x, x2, x_est, x2_est,f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range): 
+    """ Plot some results. """
     plt.figure()
     plt.subplot(141)
-    plt.plot(time1[1:], velocity_1, '-', alpha=0.8)
-    plt.plot(time1, velocity_command_1, '-', alpha=0.8, color='y')
-    
+    plt.plot(np.array(time), np.array(range_), '.', alpha=0.2, color='b')
+    plt.plot(np.array(fil_time_sonar1), np.array(x), '.', alpha=0.2, color='y')
+    plt.plot(np.array(fil_time_sonar1), np.array(x_est), '.', alpha=0.2, color='g')
+
     plt.subplot(142)
-    #plt.plot(time1[1:], velocity_sonar1_1, '.', alpha=0.8, color='b')
-    plt.plot(time1[1:], velocity_sonar2_1, '.', alpha=0.8, color='y')
+    plt.plot(np.array(time), np.array(range_), '.', alpha=0.2, color='b')
+    plt.plot(np.array(fil_time_sonar2), np.array(x2), '.', alpha=0.2, color='y')
+    plt.plot(np.array(fil_time_sonar2), np.array(x2_est), '.', alpha=0.2, color='g')
 
     plt.subplot(143)
-    plt.plot(time2, velocity_command_2, '-', alpha=0.8)
+    plt.plot(x_range, f_v_sonar1_plot)
 
     plt.subplot(144)
-    plt.plot(range_1, sonar1_1, '.', alpha=0.8, color='b')
-    plt.plot(range_1, sonar2_1, '.', alpha=0.8, color='y')
+    plt.plot(x_range, f_v_sonar2_plot)
+
 
     plt.show()
 
@@ -158,14 +250,35 @@ def plotting(time1, time2, velocity_command_1, velocity_command_2, velocity_sona
 
 def main():
     """ Main Function. """
-    # Get the data from csv and return required dataset vectors.
-    time1, range_1, velocity_command_1, sonar1_1, sonar2_1, time2, range_2, velocity_command_2, sonar1_2, sonar2_2 = get_data()
 
-    velocity_1, velocity_sonar1_1, velocity_sonar2_1, velocity_2, velocity_sonar1_2, velocity_sonar2_2 = time1, range_1, velocity_command_1, sonar1_1, sonar2_1, time2, range_2, velocity_command_2, sonar1_2, sonar2_2
+    time, range_, velocity_command, sonar1, sonar2 = get_data()
 
-    sonar_velocity_filter(time1, range_1, velocity_command_1, velocity_1, velocity_sonar1_1, velocity_sonar2_1, time2, range_2, velocity_command_2, velocity_2, velocity_sonar1_2, velocity_sonar2_2)
+    disp_command = vel_to_disp(time, velocity_command, sonar1)
 
-    plotting(time1, time2, velocity_command_1, velocity_command_2,velocity_sonar2_1, velocity_sonar1_1, velocity_1, sonar1_1, sonar2_1, range_1)
+    fil_range_sonar1, fil_range_sonar2, fil_time_sonar1, fil_time_sonar2, fil_sonar1, fil_sonar2, fil_disp_command_sonar1, fil_disp_command_sonar2 = sonar_filter(time, range_, disp_command, sonar1, sonar2)
+    
+    theta_1, theta_2 = linear_least_squares(fil_range_sonar1, fil_range_sonar2, fil_sonar1, fil_sonar2, fil_disp_command_sonar1, fil_disp_command_sonar2)
+
+    print(theta_1, theta_2)
+
+    x, x2, x_est, x2_est = approximates(fil_sonar1, fil_sonar2, fil_disp_command_sonar1, fil_disp_command_sonar2, theta_1, theta_2)      
+
+    f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range = error_PDF(x, x2, x_est, x2_est)
+
+    plotting(time, fil_time_sonar1, fil_time_sonar2, range_, x, x2, x_est, x2_est, f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range)
+
     
 
-main()
+
+
+ 
+
+######################################## Run the main func.########################################
+
+###################################################################################################
+
+main() ############################################################################################
+
+###################################################################################################
+
+###################################################################################################
