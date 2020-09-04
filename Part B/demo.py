@@ -5,17 +5,15 @@ Department of Electrical and Computer Engineering
 University of Canterbury
 """
 
+# Imports.
 from __future__ import print_function, division
 from numpy.random import uniform
 import matplotlib
-# May need to comment out following line for MacOS
-matplotlib.use("TkAgg")
-from models import motion_model, sensor_model
-from utils import *
+# May need to comment out following line for MacOS bm
 from plot import *
 from transform import *
+from models import *
 import numpy as np
-
 
 # Load data
 
@@ -68,7 +66,7 @@ axes = fig.add_subplot(111)
 plot_beacons(axes, beacon_locs, label='Beacons')
 plot_path(axes, slam_poses, '-', label='SLAM')
 # Uncomment to show odometry when debugging
-#plot_path(axes, odom_poses, 'b:', label='Odom')
+plot_path(axes, odom_poses, 'b:', label='Odom')
 
 axes.legend(loc='lower right')
 
@@ -94,6 +92,7 @@ display_steps = 10
 
 # TODO: Set initial belief
 start_pose = slam_poses[start_step]
+print(start_pose)
 Xmin = start_pose[0] - 0.1
 Xmax = start_pose[0] + 0.1
 Ymin = start_pose[1] - 0.1
@@ -160,7 +159,7 @@ plt.ioff()
 plt.show()
 
 # Save final plot to file
-plot_filename = 'path.pdf'
+plot_filename = 'Part B/path.pdf'
 print('Saving final plot to', plot_filename)
 
 plot_path(axes, est_poses, 'r-', label='PF')

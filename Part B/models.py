@@ -38,6 +38,12 @@ def motion_model(particle_poses, speed_command, odom_pose, odom_pose_prev, dt):
     """
 
     M = particle_poses.shape[0]
+
+    current_particle_poses = particle_poses.copy()
+
+    #delta_theta = odom_pose
+    
+    #x_new = current_particle_poses[0] - current_particle_poses[1] * sin()
     
     # TODO.  For each particle calculate its predicted pose plus some
     # additive error to represent the process noise.  With this demo
@@ -46,10 +52,17 @@ def motion_model(particle_poses, speed_command, odom_pose, odom_pose_prev, dt):
     # add much noise.
 
     for m in range(M):
-        particle_poses[m, 0] += randn(1) * 0.1
-        particle_poses[m, 1] -= 0.1
+        particle_poses[m, 0] += odom_pose[0] - odom_pose_prev[0] # First column is x.
+        particle_poses[m, 1] += odom_pose[1] - odom_pose_prev[1] # Second column is y.   
+        particle_poses[m, 2] = odom_pose[2]# - odom_pose_prev[2] # Third colum is theta.
     
     return particle_poses
+    '''
+    for m in range(M):
+        particle_poses[m, 0] += randn(1) * 0.5
+        particle_poses[m, 1] -= 0.1
+    
+    return particle_poses'''
 
 
 def sensor_model(particle_poses, beacon_pose, beacon_loc):
