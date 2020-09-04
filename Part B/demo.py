@@ -108,6 +108,8 @@ for m in range(Nparticles):
                 uniform(Ymin, Ymax),
                 uniform(Tmin, Tmax))
 
+print(poses)
+
 Nposes = odom_poses.shape[0]
 est_poses = np.zeros((Nposes, 3))
 
@@ -146,7 +148,7 @@ for n in range(start_step + 1, Nposes):
         plot_particles(axes, poses, weights)
 
         # Leave breadcrumbs showing current odometry
-        # plot_path(axes, odom_poses[n], 'k.')
+        #plot_path(axes, odom_poses[n], 'k.')
 
         # Show mean estimate
         plot_path_with_visibility(axes, est_poses[display_step_prev-1 : n+1],
