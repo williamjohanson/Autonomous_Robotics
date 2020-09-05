@@ -50,6 +50,8 @@ def mod_Z_score(range_, sonar1, sonar2):
     median_sonar1_abs = sorted_sonar1_error_abs[median_pos_sonar1]
     median_sonar2_abs = sorted_sonar2_error_abs[median_pos_sonar2]
 
+    print(median_sonar1_abs, median_sonar2_abs)
+
     M_sonar1 = 0.6745 * (sonar1_error - median_sonar1) / median_sonar1_abs
     M_sonar2 = 0.6745 * (sonar2_error - median_sonar2) / median_sonar2_abs
 
