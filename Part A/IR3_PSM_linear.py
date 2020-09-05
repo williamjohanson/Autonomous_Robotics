@@ -40,8 +40,6 @@ def model_nonlinear_least_squares_fit(x, z, iterations=5):
 ###################################################################################################
 
 def linear_ML_IR(k, z, x0, var_V):
-    Z_approx = []
-    X_approx = []
 
     h_x = model_h_x(x0, k)
     dh_x = model_dh_x(x0, k) 
