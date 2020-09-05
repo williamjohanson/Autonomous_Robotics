@@ -57,7 +57,7 @@ def mod_Z_score(range_, sonar1, sonar2):
 
     return M_sonar1, M_sonar2
 
-#def sonar_filter(time, range_, sonar1, sonar2):
+def sonar_filter(time, range_, sonar1, sonar2):
     """ Implement a Iglewicz and Hoaglin's modified Z-score filter. """
     # Z-score.
     M_sonar1, M_sonar2 = mod_Z_score(range_, sonar1, sonar2)
