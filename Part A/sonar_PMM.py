@@ -183,6 +183,21 @@ def error_PDF(x, x2, x_est, x2_est):
 
 ###################################################################################################
 
+def robot_velocity(range_, time):
+    velocity_array = []
+    t0 = time[1]
+    r0 = range_[1]
+    N = len(time)
+    for i in range(N):
+        v = (range_[i] - r0) / (time[i] - t0)
+        velocity_array.append(v)
+        r0 = range_[i]
+        t0 = time[i]
+    
+    return velocity_array
+
+def 
+
 def approximates(fil_sonar1, fil_sonar2, fil_disp_command_sonar1, fil_disp_command_sonar2, theta_1, theta_2):
     """ Approximate data and determined data for plotting. """
     #sonar2_min = 0.3 # Min the sonar 2 can see.
@@ -224,7 +239,7 @@ def approximates(fil_sonar1, fil_sonar2, fil_disp_command_sonar1, fil_disp_comma
 
 ###################################################################################################
 
-def plotting(time, fil_time_sonar1, fil_time_sonar2, range_, x, x2, x_est, x2_est,f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range): 
+def plotting(time, fil_time_sonar1, fil_time_sonar2, range_, x, x2, x_est, x2_est,f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range, disp_command, velocity_command, robot_vel): 
     """ Plot some results. """
     plt.figure()
     plt.subplot(141)
@@ -243,7 +258,9 @@ def plotting(time, fil_time_sonar1, fil_time_sonar2, range_, x, x2, x_est, x2_es
     plt.subplot(144)
     plt.plot(x_range, f_v_sonar2_plot)
 
-
+    plt.figure()
+    plt.plot( time, robot_vel)
+    plt.plot( time, velocity_command)
     plt.show()
 
 ###################################################################################################
@@ -265,7 +282,9 @@ def main():
 
     f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range = error_PDF(x, x2, x_est, x2_est)
 
-    plotting(time, fil_time_sonar1, fil_time_sonar2, range_, x, x2, x_est, x2_est, f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range)
+    robot_vel = robot_velocity(range_, time)
+
+    plotting(time, fil_time_sonar1, fil_time_sonar2, range_, x, x2, x_est, x2_est, f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range, disp_command, velocity_command, robot_vel)
 
     
 
