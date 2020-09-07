@@ -85,7 +85,7 @@ axes.figure.canvas.flush_events()
 start_step = 50
 
 # TODO: Number of particles, you may need more or fewer!
-Nparticles = 100
+Nparticles = 1000
 
 # TODO: How many steps between display updates
 display_steps = 10
@@ -107,8 +107,6 @@ for m in range(Nparticles):
     poses[m] = (uniform(Xmin, Xmax),
                 uniform(Ymin, Ymax),
                 uniform(Tmin, Tmax))
-
-print(poses)
 
 Nposes = odom_poses.shape[0]
 est_poses = np.zeros((Nposes, 3))
