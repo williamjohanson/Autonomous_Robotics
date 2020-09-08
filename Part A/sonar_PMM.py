@@ -196,7 +196,6 @@ def robot_velocity(range_, time):
     
     return velocity_array
 
-def 
 
 def approximates(fil_sonar1, fil_sonar2, fil_disp_command_sonar1, fil_disp_command_sonar2, theta_1, theta_2):
     """ Approximate data and determined data for plotting. """
