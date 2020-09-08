@@ -14,6 +14,7 @@ from plot import *
 from transform import *
 from models import *
 import numpy as np
+import motion_model_plots
 
 # Load data
 
@@ -85,7 +86,7 @@ axes.figure.canvas.flush_events()
 start_step = 50
 
 # TODO: Number of particles, you may need more or fewer!
-Nparticles = 1000
+Nparticles = 100
 
 # TODO: How many steps between display updates
 display_steps = 10
@@ -111,6 +112,10 @@ for m in range(Nparticles):
 Nposes = odom_poses.shape[0]
 est_poses = np.zeros((Nposes, 3))
 
+error_x_array = []
+error_y_array = []
+error_theta_array = []
+
 display_step_prev = 0
 # Iterate over each timestep.
 for n in range(start_step + 1, Nposes):
@@ -118,6 +123,12 @@ for n in range(start_step + 1, Nposes):
     # TODO: write motion model function
     poses = motion_model(poses, commands[n-1], odom_poses[n], odom_poses[n - 1],
                          t[n] - t[n - 1])
+    error_x = (sum(poses[:,0]) / len(poses[:,0])) - slam_poses[n][0]
+    error_y = (sum(poses[:,1]) / len(poses[:,1])) - slam_poses[n][1]
+    error_theta = ((sum(poses[:,2]) / len(poses[:,2])) - slam_poses[n][2]) % (2 * np.pi)
+    error_x_array.append(error_x)
+    error_y_array.append(error_y)
+    error_theta_array.append(error_theta)
 
     if beacon_visible[n]:
 
@@ -153,6 +164,7 @@ for n in range(start_step + 1, Nposes):
                                   '-', visibility=beacon_visible[display_step_prev-1 : n+1])
         display_step_prev = n
 
+motion_model_plots.plot_errors(error_x_array, error_y_array, error_theta_array)
 # Display final plot
 print('Done, displaying final plot')
 plt.ioff()

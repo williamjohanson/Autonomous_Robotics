@@ -44,7 +44,7 @@ def motion_model(particle_poses, speed_command, odom_pose, odom_pose_prev, dt):
     else:
         trajectory = np.pi / 2
 
-    d = np.sqrt(((odom_pose[1] - odom_pose_prev[1]) ** 2) + ((odom_pose[0] - odom_pose_prev[0]) ** 2))
+    d = np.sqrt(((odom_pose[1] - odom_pose_prev[1]) ** 2) + ((odom_pose[0] - odom_pose_prev[0]) ** 2)) 
     phi_1_local = np.radians(min((2*np.pi - (odom_pose_prev[2] - trajectory)), (odom_pose_prev[2] - trajectory)))
     phi_2_local = np.radians(min((2*np.pi - (odom_pose[2] - trajectory)), (odom_pose[2] - trajectory)))
     
@@ -58,7 +58,7 @@ def motion_model(particle_poses, speed_command, odom_pose, odom_pose_prev, dt):
         # Currently is outputting odometry. Need to convert to global?? Add in the noise?
         particle_poses[m, 0] += difference_x # First column is x.
         particle_poses[m, 1] += difference_y # Second column is y.   
-        particle_poses[m, 2] += difference_theta # Third colum is theta.
+        particle_poses[m, 2] = (particle_poses[m, 2] + difference_theta) % 2 * np.pi # Third colum is theta.
     
     return particle_poses
 
@@ -88,6 +88,7 @@ def sensor_model(particle_poses, beacon_pose, beacon_loc):
 
     M = particle_poses.shape[0]
     particle_weights = np.zeros(M)
+    original = particle_weights.copy()
 
     r_meas = []
     phi_meas = []
@@ -137,11 +138,12 @@ def sensor_model(particle_poses, beacon_pose, beacon_loc):
     var_r = sum(var_r_array) / len(var_r_array)
     var_phi = sum(var_phi_array) / len(var_phi_array)
     
-    #print(var_r, var_phi)
+    print(var_r, var_phi)
     
+    mu = 1
+    sigma = np.sqrt(abs((r_meas[0] - r_true)))
+
     for m in range(M):
-
-        particle_weights[m] = (1 / np.sqrt(2 * np.pi * var_r)) * np.exp((-1/2) * ((error_r_array[m] - mean_r) ** 2) / (var_r)) * (1 / np.sqrt(2 * np.pi * var_phi)) * np.exp((-1/2) * ((error_phi_array[m] - mean_phi) ** 2) / (var_phi))#np.random.normal(mean_r, np.sqrt(var_r), 1) * np.random.normal(mean_phi, np.sqrt(var_phi), 1)
-
+            particle_weights[m] = mu + np.random.randn() * sigma#(1 / np.sqrt(2 * np.pi * var_r)) * np.exp((-1/2) * ((error_r_array[m] - mean_r) ** 2) / (var_r)) * (1 / np.sqrt(2 * np.pi * var_phi)) * np.exp((-1/2) * ((error_phi_array[m] - mean_phi) ** 2) / (var_phi))#np.random.normal(mean_r, np.sqrt(var_r), 1) * np.random.normal(mean_phi, np.sqrt(var_phi), 1)
 
     return particle_weights
