@@ -44,6 +44,8 @@ def motion_model(particle_poses, speed_command, odom_pose, odom_pose_prev, dt):
     else:
         trajectory = np.pi / 2
 
+    trajectory = wraptopi(trajectory)
+
     d = np.sqrt(((odom_pose[1] - odom_pose_prev[1]) ** 2) + ((odom_pose[0] - odom_pose_prev[0]) ** 2)) 
     phi_1_local = np.radians(min((2*np.pi - (odom_pose_prev[2] - trajectory)), (odom_pose_prev[2] - trajectory)))
     phi_2_local = np.radians(min((2*np.pi - (odom_pose[2] - trajectory)), (odom_pose[2] - trajectory)))
@@ -53,15 +55,39 @@ def motion_model(particle_poses, speed_command, odom_pose, odom_pose_prev, dt):
     difference_theta = (((odom_pose[2]  + phi_1_local + phi_2_local)) + np.pi) % (2 * np.pi) - np.pi#odom_pose[2] - odom_pose_prev[2]# + phi_1_local + phi_2_local) # Third colum is theta.
     #print(difference_x, difference_y, difference_theta)
     #difference_theta = min(2*np.pi - (odom_pose[2] - (odom_pose_prev[2] + phi_1_local + phi_2_local)),(odom_pose[2] - (odom_pose_prev[2] + phi_1_local + phi_2_local))) # Third colum is theta.  
-    
+    mu = 0
+    sigma = 0.01
+
     for m in range(M):
         # Currently is outputting odometry. Need to convert to global?? Add in the noise?
-        particle_poses[m, 0] += difference_x # First column is x.
-        particle_poses[m, 1] += difference_y # Second column is y.   
-        particle_poses[m, 2] = (particle_poses[m, 2] + difference_theta) % 2 * np.pi # Third colum is theta.
-    
+        particle_poses[m, 0] += difference_x + mu + randn() * sigma # First column is x.
+        particle_poses[m, 1] += difference_y + mu + randn() * sigma# Second column is y.   
+        particle_poses[m, 2] = (particle_poses[m, 2] + difference_theta) % 2 * np.pi + mu + randn() * sigma # Third colum is theta.
+
+
     return particle_poses
 
+
+def sensor_model(particle_poses, beacon_pose, beacon_loc):
+    """Apply sensor model and return particle weights. """
+    M = particle_poses.shape[0]
+    particle_weights = np.zeros(M)
+
+    r = np.sqrt((beacon_pose[0]) ** 2 + (beacon_pose[1]) ** 2)
+    phi = arctan2(beacon_pose[1], beacon_pose[0])
+
+    for m in range(M):
+        r_m = np.sqrt((beacon_loc[0] - particle_poses[m][0]) ** 2 + (beacon_loc[1] - particle_poses[m][1]) ** 2) 
+        phi_m = angle_difference(arctan2(beacon_loc[1] - particle_poses[m][1], beacon_loc[0] - particle_poses[m][0]), particle_poses[m][2])
+
+        r_val = r - r_m
+        phi_val = angle_difference(phi, phi_m)
+
+        particle_weights[m] = gauss(r_val) * gauss(phi_val)
+
+
+    return particle_weights
+'''
 def sensor_model(particle_poses, beacon_pose, beacon_loc):
     """Apply sensor model and return particle weights.
 
@@ -147,3 +173,4 @@ def sensor_model(particle_poses, beacon_pose, beacon_loc):
             particle_weights[m] = mu + np.random.randn() * sigma#(1 / np.sqrt(2 * np.pi * var_r)) * np.exp((-1/2) * ((error_r_array[m] - mean_r) ** 2) / (var_r)) * (1 / np.sqrt(2 * np.pi * var_phi)) * np.exp((-1/2) * ((error_phi_array[m] - mean_phi) ** 2) / (var_phi))#np.random.normal(mean_r, np.sqrt(var_r), 1) * np.random.normal(mean_phi, np.sqrt(var_phi), 1)
 
     return particle_weights
+'''

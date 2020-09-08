@@ -86,7 +86,7 @@ axes.figure.canvas.flush_events()
 start_step = 50
 
 # TODO: Number of particles, you may need more or fewer!
-Nparticles = 100
+Nparticles = 500
 
 # TODO: How many steps between display updates
 display_steps = 10
