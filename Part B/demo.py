@@ -32,7 +32,7 @@ commands = data[:, 1:3]
 # Position in map frame, from SLAM (this approximates ground truth)
 slam_poses = data[:, 3:6]
 
-# Position in odometry frame, from wheel encoders and gyro
+# Position in odometry frame, from wheel encoders and gyro g
 odom_poses = data[:, 6:9]
 
 # Id and measured position of beacon in camera frame
@@ -89,7 +89,7 @@ start_step = 50
 Nparticles = 500
 
 # TODO: How many steps between display updates
-display_steps = 10
+display_steps = 5
 
 # TODO: Set initial belief
 start_pose = slam_poses[start_step]
@@ -123,12 +123,6 @@ for n in range(start_step + 1, Nposes):
     # TODO: write motion model function
     poses = motion_model(poses, commands[n-1], odom_poses[n], odom_poses[n - 1],
                          t[n] - t[n - 1])
-    error_x = (sum(poses[:,0]) / len(poses[:,0])) - slam_poses[n][0]
-    error_y = (sum(poses[:,1]) / len(poses[:,1])) - slam_poses[n][1]
-    error_theta = ((sum(poses[:,2]) / len(poses[:,2])) - slam_poses[n][2]) % (2 * np.pi)
-    error_x_array.append(error_x)
-    error_y_array.append(error_y)
-    error_theta_array.append(error_theta)
 
     if beacon_visible[n]:
 
@@ -149,6 +143,13 @@ for n in range(start_step + 1, Nposes):
             resample(poses, weights)
 
     est_poses[n] = poses.mean(axis=0)
+
+    error_x = est_poses[n,0] - slam_poses[n][0]
+    error_y = est_poses[n,1] - slam_poses[n][1]
+    error_theta = angle_difference(est_poses[n,2], slam_poses[n][2])
+    error_x_array.append(error_x)
+    error_y_array.append(error_y)
+    error_theta_array.append(error_theta)
 
     if n > display_step_prev + display_steps:
         print(n)
