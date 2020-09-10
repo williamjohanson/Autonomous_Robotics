@@ -128,7 +128,7 @@ def calibrate():
     plt.legend()
 
     plt.show()
-
+    print(k)
     return k, var_V
         
-#calibrate()
+calibrate()

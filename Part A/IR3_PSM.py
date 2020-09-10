@@ -143,10 +143,10 @@ def calibration():
     plt.ylabel('Distance (m)')
     plt.xlabel('Time (s)')
     #plt.show()
-
+    
     return var_V, k
     #savefig(__file__.replace('.py', '.pgf'), bbox_inches='tight')
 
 
 
-#calibration()
+calibration()

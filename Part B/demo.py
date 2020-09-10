@@ -1,7 +1,6 @@
 """Particle filter demonstration program.
 
-M.P. Hayes and M.J. Edwards,
-Department of Electrical and Computer Engineering
+William Johanson
 University of Canterbury
 """
 
@@ -81,17 +80,16 @@ axes.set_ylabel('x')
 axes.figure.canvas.draw()
 axes.figure.canvas.flush_events()
 
-# TODO: Set this to avoid twirl at start
-# When your algorithm works well set to 0
+# Set this to start
 start_step = 50
 
-# TODO: Number of particles, you may need more or fewer!
+# Number of particles.
 Nparticles = 100
 
-# TODO: How many steps between display updates
+# How many steps between display updates.
 display_steps = 4
 
-# TODO: Set initial belief
+# Set initial belief.
 start_pose = slam_poses[start_step]
 print(start_pose)
 Xmin = start_pose[0] - 0.1
@@ -117,6 +115,7 @@ error_y_array = []
 error_theta_array = []
 
 display_step_prev = 0
+
 # Iterate over each timestep.
 for n in range(start_step + 1, Nposes):
 
@@ -136,7 +135,6 @@ for n in range(start_step + 1, Nposes):
         if sum(weights) < 1e-50:
             print('All weights are close to zero, you are lost...')
             weights = np.ones(Nparticles)
-            #break
 
         if is_degenerate(weights):
             print('Resampling %d' % n)
