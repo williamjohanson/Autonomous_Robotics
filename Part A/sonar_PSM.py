@@ -7,6 +7,7 @@
 # Imports
 import numpy as np
 import matplotlib.pyplot as plt
+import IR3_PSM
 
 ###################################################################################################
 
@@ -50,7 +51,7 @@ def mod_Z_score(range_, sonar1, sonar2):
     median_sonar1_abs = sorted_sonar1_error_abs[median_pos_sonar1]
     median_sonar2_abs = sorted_sonar2_error_abs[median_pos_sonar2]
 
-    print(median_sonar1_abs, median_sonar2_abs)
+    #print(median_sonar1_abs, median_sonar2_abs)
 
     M_sonar1 = 0.6745 * (sonar1_error - median_sonar1) / median_sonar1_abs
     M_sonar2 = 0.6745 * (sonar2_error - median_sonar2) / median_sonar2_abs
@@ -123,7 +124,7 @@ def error_PDF(fil_range_sonar1, fil_range_sonar2, sonar1_h_x, sonar2_h_x):
 
     mean_sonar1 = sum(error_sonar1) / len(error_sonar1)
     mean_sonar2 = sum(error_sonar2) / len(error_sonar2)
-
+    print(mean_sonar1, mean_sonar2)
     var_sonar1_array = []
     var_sonar2_array = []
 
@@ -136,7 +137,7 @@ def error_PDF(fil_range_sonar1, fil_range_sonar2, sonar1_h_x, sonar2_h_x):
     var_sonar1 = sum(var_sonar1_array) / len(var_sonar1_array)
     var_sonar2 = sum(var_sonar2_array) / len(var_sonar2_array)
 
-    print("{}:{}\n{}:{}\n".format(mean_sonar1,var_sonar1,mean_sonar2,var_sonar2))
+    #print("{}:{}\n{}:{}\n".format(mean_sonar1,var_sonar1,mean_sonar2,var_sonar2))
 
     f_v_sonar1_plot = []
     f_v_sonar2_plot = []
@@ -158,7 +159,7 @@ def error_PDF(fil_range_sonar1, fil_range_sonar2, sonar1_h_x, sonar2_h_x):
         f_v_sonar2.append((1 / np.sqrt(2 * np.pi * var_sonar2)) * np.exp((-1/2) * ((val - mean_sonar2) ** 2) / (var_sonar2)))
 
 
-    return f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range
+    return f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range, var_sonar1, var_sonar2
 
 ###################################################################################################
 
@@ -230,38 +231,56 @@ f_v_sonar1_plot, f_v_sonar2_plot, time, range_, sonar1, determined_z_1, determin
 
     plt.show()
 
+def MLE_sonar(zS1, zS2, kS1, kS2, varV_S1, varV_S2):
+    xhat_S1 = (zS1 - kS1[0])/kS1[1]
+    xhat_S2 = (zS2 - kS2[0])/kS2[1]
+    varX_S1 = varV_S1/(kS1[0])**2
+    varX_S2 = varV_S2/(kS2[0])**2
+
+    return xhat_S1, xhat_S2, varX_S1, varX_S2
+
+
 ###################################################################################################
 
-def main():
+def calibration():
     """ Main Function. """
 
     time, range_, sonar1, sonar2 = get_data()
 
     fil_range_sonar1, fil_range_sonar2, fil_time_sonar1, fil_time_sonar2, fil_values_sonar1, fil_values_sonar2 = sonar_filter(time, range_, sonar1, sonar2)
 
-    theta_1, theta_2 = linear_least_squares(fil_range_sonar1, fil_range_sonar2, fil_values_sonar1, fil_values_sonar2)
+    kS1, kS2 = linear_least_squares(fil_range_sonar1, fil_range_sonar2, fil_values_sonar1, fil_values_sonar2)
 
+    plt.figure()
+    plt.plot(range_, sonar2, 'bo')
+
+    plt.show()
     # Calculate linear motion functions h(x)
-    sonar1_h_x = theta_1[0] + theta_1[1] * np.array(fil_values_sonar1)
-    sonar2_h_x = theta_2[0] + theta_2[1] * np.array(fil_values_sonar2)
+    #sonar1_h_x = kS1[0] + kS1[1] * np.array(fil_values_sonar1)
+    #sonar2_h_x = kS2[0] + kS2[1] * np.array(fil_values_sonar2)
 
-    f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range = error_PDF(fil_range_sonar1, fil_range_sonar2, sonar1_h_x, sonar2_h_x)    
+    sonar1_h_x = kS1[0] + kS1[1] * np.array(sonar1)
+    sonar2_h_x = kS2[0] + kS2[1] * np.array(sonar2)
 
-    determined_z_1, determined_z_2 = approximate(sonar1_h_x, sonar2_h_x, f_v_sonar1, f_v_sonar2, theta_1, theta_2)
+    #f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range, varV_S1, varV_S2 = error_PDF(fil_range_sonar1, fil_range_sonar2, sonar1_h_x, sonar2_h_x)
+    f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range, varV_S1, varV_S2 = error_PDF(range_, range_, sonar1_h_x, sonar2_h_x)
 
-    plotting(fil_range_sonar1, fil_range_sonar2, fil_time_sonar1, fil_time_sonar2, sonar1_h_x, sonar2_h_x, f_v_sonar1_plot, f_v_sonar2_plot, time, range_, sonar1, determined_z_1, determined_z_2, x_range)
+    determined_z_1, determined_z_2 = approximate(sonar1_h_x, sonar2_h_x, f_v_sonar1, f_v_sonar2, kS1, kS2)
 
+    #plotting(fil_range_sonar1, fil_range_sonar2, fil_time_sonar1, fil_time_sonar2, sonar1_h_x, sonar2_h_x, f_v_sonar1_plot, f_v_sonar2_plot, time, range_, sonar1, determined_z_1, determined_z_2, x_range)
+    #plotting(range_, range_, time, time, sonar1_h_x, sonar2_h_x, f_v_sonar1_plot, f_v_sonar2_plot, time, range_, sonar1, determined_z_1, determined_z_2, x_range)
+    return  varV_S1, varV_S2, kS1, kS2
     
 
 
 
- 
+#calibration()
 
 ######################################## Run the main func.########################################
 
 ###################################################################################################
 
-main() ############################################################################################
+#main() ############################################################################################
 
 ###################################################################################################
 

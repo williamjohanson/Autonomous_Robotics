@@ -31,17 +31,16 @@ def model(k, X):
 
 def linear_least_squares(velocity_command, D_step, T_step):
     N = len(T_step)
-    Z = []
-    k = zeros(2)
+    Z = [0]
     for i in range(N):
-        z = velocity_command[i] * T_step[i]
+        z = Z[i] + velocity_command[i] * T_step[i]
         Z.append(z)
-    
+    Z = Z[1:]
     Z_vect = np.transpose(Z)
-    X = np.transpose(np.array([ D_step, np.ones(len(D_step), dtype=int)]))
+    X = np.transpose(np.array([D_step, np.ones(len(D_step), dtype=int)]))
 
-    delt, res, rank, s = np.linalg.lstsq(X, Z_vect)
-    k += delt
+    k, res, rank, s = np.linalg.lstsq(X, Z_vect)
+
     return k, Z
 
 def mean(Z_meas, h_x):
@@ -70,7 +69,12 @@ def PDF(var_V, mean_V):
 
     return f_v_IR3
 
-def main():
+def MLE_D_step(k, z, var_V):
+    b =  (z)/k[0]
+    var_X = var_V/(k[0]**2)
+    return b, var_X
+
+def calibrate():
     #create time step arrray
     #solving ut = m(actual distance step) + c
     #aka     Z  = k[0](D_step) + k[1]
@@ -95,28 +99,36 @@ def main():
     R_step = np.array(R_step)
     T_step = np.array(T_step)
 
-    k, Z = linear_least_squares(velocity_command, R_step, T_step)
-    h_x = model(k, R_step)
-    
-    V_noise = np.array(Z) - np.transpose(np.array(h_x))  
+    k, Z = linear_least_squares(velocity_command, range_, T_step)
+    h_x = [model(k, z) for z in Z]
+    V_noise = np.array(range_) - np.transpose(np.array(h_x))  
 
-    mean_V = mean(Z, h_x)
+    mean_V = mean(range_, h_x)
     var_V = variance(mean_V, V_noise)
     f_v_MM = np.transpose(PDF(var_V, mean_V))
+
+    print("varian",var_V, "mean", mean_V)
+    #b, var_X = MLE_D_step(k, z, var_V)
 
 
     plt.figure()
     x_array = linspace(-5,5,400)
     plt.plot(x_array, f_v_MM)
+    plt.xlabel('Range (m)')
+    plt.ylabel('PDF')
+    plt.title('Motion Model PDF') 
+
 
     plt.figure()
-    plt.plot(time, R_step)
-    plt.plot(time,h_x)
-
+    plt.plot(time, range_, label='true range')
+    plt.plot(time, h_x, label='motion model')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Range (m)')
+    plt.title('Motion Model Compared Against True Range') 
+    plt.legend()
 
     plt.show()
 
+    return k, var_V
         
-
-
-main()
+#calibrate()
