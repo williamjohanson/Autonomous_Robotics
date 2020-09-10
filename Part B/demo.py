@@ -86,10 +86,10 @@ axes.figure.canvas.flush_events()
 start_step = 50
 
 # TODO: Number of particles, you may need more or fewer!
-Nparticles = 500
+Nparticles = 100
 
 # TODO: How many steps between display updates
-display_steps = 5
+display_steps = 4
 
 # TODO: Set initial belief
 start_pose = slam_poses[start_step]
@@ -120,7 +120,7 @@ display_step_prev = 0
 # Iterate over each timestep.
 for n in range(start_step + 1, Nposes):
 
-    # TODO: write motion model function
+    # Write motion model function
     poses = motion_model(poses, commands[n-1], odom_poses[n], odom_poses[n - 1],
                          t[n] - t[n - 1])
 
@@ -130,13 +130,13 @@ for n in range(start_step + 1, Nposes):
         beacon_loc = beacon_locs[beacon_id]
         beacon_pose = beacon_poses[n]
 
-        # TODO: write sensor model function
+        # Write sensor model function
         weights *= sensor_model(poses, beacon_pose, beacon_loc)
 
         if sum(weights) < 1e-50:
             print('All weights are close to zero, you are lost...')
-            # TODO: Do something to recover
-            break
+            weights = np.ones(Nparticles)
+            #break
 
         if is_degenerate(weights):
             print('Resampling %d' % n)

@@ -39,37 +39,31 @@ def motion_model(particle_poses, speed_command, odom_pose, odom_pose_prev, dt):
 
     M = particle_poses.shape[0]
 
-    #if odom_pose[0] != odom_pose_prev[0]:
     trajectory = arctan2((odom_pose[1] - odom_pose_prev[1]), (odom_pose[0] - odom_pose_prev[0]))
-    #else:
-        #trajectory = np.pi / 2
 
     d = sqrt(((odom_pose[1] - odom_pose_prev[1]) ** 2) + ((odom_pose[0] - odom_pose_prev[0]) ** 2)) 
     phi_1_local = angle_difference(odom_pose_prev[2], trajectory)
     phi_2_local = angle_difference(odom_pose[2], trajectory)
     
-    difference_x = d * np.cos(odom_pose[2] + phi_1_local)#odom_pose[0] -odom_pose_prev[0]# + d * cos(odom_pose_prev[2] + phi_1_local)) # First column is x.
-    difference_y = d * np.sin(odom_pose[2] + phi_1_local)#odom_pose[1] - odom_pose_prev[1]# + d * sin(odom_pose_prev[2] + phi_1_local)) # Second column is y.   
-    difference_theta = (((odom_pose[2]  + phi_1_local + phi_2_local)) + np.pi) - np.pi#odom_pose[2] - odom_pose_prev[2]# + phi_1_local + phi_2_local) # Third colum is theta.
-    #print(difference_x, difference_y, difference_theta)
-    #difference_theta = min(2*np.pi - (odom_pose[2] - (odom_pose_prev[2] + phi_1_local + phi_2_local)),(odom_pose[2] - (odom_pose_prev[2] + phi_1_local + phi_2_local))) # Third colum is theta.  
-
-    mu_x = 0 
-    sigma_x = 0.03
+    difference_x = d * cos(odom_pose[2] + phi_1_local) # First column is x.
+    difference_y = d * sin(odom_pose[2] + phi_1_local) # Second column is y.   
+    difference_theta = wraptopi(phi_1_local + phi_2_local) # Third colum is theta.
+    
+    mu_x = 0
+    sigma_x = 0.01
     mu_y = 0
-    sigma_y = 0.015
+    sigma_y = 0.008
     mu_theta = 0
-    sigma_theta = 0.03
+    sigma_theta = 0.0007
 
     for m in range(M):
         # Currently is outputting odometry. Need to convert to global?? Add in the noise?
         particle_poses[m, 0] += difference_x + mu_x + randn() * sigma_x # First column is x.
-        particle_poses[m, 1] += difference_y + mu_y + randn() * sigma_y# Second column is y.   
-        particle_poses[m, 2] = (particle_poses[m, 2] + difference_theta) + mu_theta + randn() * sigma_theta # Third colum is theta.
+        particle_poses[m, 1] += difference_y + mu_y + randn() * sigma_y # Second column is y.   
+        particle_poses[m, 2] = wraptopi((particle_poses[m, 2] + difference_theta) + mu_theta + randn() * sigma_theta) # Third colum is theta.
 
 
     return particle_poses
-
 
 def sensor_model(particle_poses, beacon_pose, beacon_loc):
     """ Apply sensor model and return particle weights. 
@@ -107,7 +101,7 @@ def sensor_model(particle_poses, beacon_pose, beacon_loc):
         r_val = r - r_m
         phi_val = angle_difference(phi, phi_m)
 
-        particle_weights[m] = gauss(r_val, sigma=0.1) * gauss(phi_val, sigma=0.2)
+        particle_weights[m] = gauss(r_val, mu=0, sigma=(r_m ** 2)) * gauss(phi_val, mu=0, sigma=(r_m ** 2))
 
 
     return particle_weights
