@@ -33,7 +33,7 @@ def model_nonlinear_least_squares_fit(x, z, iterations=5):
         # Use least squares to estimate the parameters.
         deltak, res, rank, s = lstsq(A, z - model_h_x(x, k))
         k += deltak
-        print(k)
+
     return k
 
 
@@ -42,8 +42,9 @@ def model_nonlinear_least_squares_fit(x, z, iterations=5):
 def linear_ML_IR(k, z, x0, var_V):
 
     h_x = model_h_x(x0, k)
-    dh_x = model_dh_x(x0, k) 
+    dh_x = model_dh_x(x0, k)
     x_hat = (z - h_x) / dh_x + x0
+
     var_x_hat = var_V/(dh_x)**2
     return x_hat, var_x_hat
 
@@ -64,7 +65,7 @@ def variance(mean_V, V_noise):
 def PDF(var_V, mean_V):
     """ Work out the PDF's (mean and variance). """
     # Determine likelihoods.
-    print("{}:{}\n".format(mean_V,var_V))
+    #print("{}:{}\n".format(mean_V,var_V))
 
     f_v_IR3 = []
     x_array = linspace(-5,5,400)
@@ -82,11 +83,8 @@ def filter_outliers(V_vector):
     
     pass
 
-def BLUE(varS1, varS2, varIR3, S1_x, S2_x, IR3_x):
-    x_hat_fusion =  ((1/varS2)*S1_x + (1/varS2)*S2 + (1/varIR3)*IR3_x) / (1/varS1 + 1/varS2 + 1/varIR3)
-    return x_hat_fusion
 
-def main():
+def calibration():
     data = loadtxt('Part A/calibration.csv', delimiter=',', skiprows=1)
     index, time, range_, velocity_command, raw_ir1, raw_ir2, raw_ir3, raw_ir4, sonar1, sonar2 = data.T
     
@@ -103,40 +101,52 @@ def main():
     mean_V = mean(Z_meas, h_x)
     var_V = variance(mean_V, V_noise)
     f_v_IR3 = np.transpose(PDF(var_V, mean_V))
-    
+    print(var_V, mean_V)
     #for a given measurement z this function will determine where the ML estimate of the next point is, but
     #where do i get my initial guess from? is it form my other sensors?
-    x0 = X_state[1]
+    x0 = X_state[0]
     N = len(Z_meas)
     X_hat_array = []
+
+ 
     for n in range(N):
         z = Z_meas[n]
         var_z = V_noise[n]
         x_hat, var_x_hat = linear_ML_IR(k, z, x0, var_V)
         X_hat_array.append(x_hat)
-        x0 = x_hat
+        x0 = range_[n]
 
+    z_array = linspace(3.0,0.2, 201)
 
-    plt.figure()
+    
     x_array = linspace(-5,5,400)
 
+    plt.figure()
     plt.plot(x_array, f_v_IR3)
-    plt.xlabel('IR3 voltage')
+    plt.xlabel('Voltage')
     plt.ylabel('PDF')
     plt.title('IR3 PDF') 
 
     plt.figure()
-    plt.plot(X_state, Z_meas, 'bo')
-    plt.plot(X_array, h_x_plot,'ko')
-    plt.plot(X_hat_array, Z_meas, 'ro')
-    plt.ylabel('Distance (m)')
-    plt.xlabel('Voltage (V)')
+    plt.scatter(X_state, Z_meas, label='raw data', s=10, c='b', marker='o')
+    plt.scatter(X_hat_array, Z_meas, label='taylor series approx', s=15, c='r', marker='o', alpha=0.2)
+    plt.plot(X_array, h_x_plot, label='non-linear approx', markersize=10, color='k', linewidth=4)
+    plt.legend()
+    plt.ylabel('Voltage (V)')
+    plt.xlabel('Distance (m)')
     plt.title('$k_1$ = %.3f, $k_2$ = %.3f, $k_3$ = %.3f' % (k[0], k[1], k[2]))
     plt.grid(True)
 
-    plt.show()
+    plt.figure()
+    plt.plot(time[1:758], range_[1:758], 'ko', alpha=0.2)
+    plt.plot(time[1:758], X_hat_array, 'ro', alpha=0.2)
+    plt.ylabel('Distance (m)')
+    plt.xlabel('Time (s)')
+    #plt.show()
+
+    return var_V, k
     #savefig(__file__.replace('.py', '.pgf'), bbox_inches='tight')
 
 
 
-main()
+#calibration()
