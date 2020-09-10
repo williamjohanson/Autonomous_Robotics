@@ -43,7 +43,7 @@ def BLUE(varS1, varS2, varIR3, S1_x, S2_x, IR3_x):
     #BLUE_Var = (1/(1/varS1 + 1/varS2 + 1/varIR3))
     P = (1/(1/varS1 + 1/varS2))
     #P = 1/(1/varS2)
-    xhat_fusion =  ((1/varS1) * P *S1_x) + (1/varS2 * P * S2_x)# +  (1/varIR3 * BLUE_Var * IR3_x)
+    xhat_fusion =  ((1/varS1) * P *S1_x) + ((1/varS2) * P * S2_x)# +  (1/varIR3 * BLUE_Var * IR3_x)
     #xhat_fusion =  (1/varS2) * P * S2_x 
     return xhat_fusion, P
 

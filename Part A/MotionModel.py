@@ -12,7 +12,7 @@ from numpy import loadtxt, ones, zeros, linspace
 def get_data():
     """ Get the calibration data. """
     # Load data
-    filename = 'Part A/test.csv'
+    filename = 'Part A/training1.csv'
     data = np.loadtxt(filename, delimiter=',', skiprows=1)
 
     # Split into columns

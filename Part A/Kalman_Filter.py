@@ -80,9 +80,13 @@ def Kalman_Filter():
         t_prev = time[i]
 
     plt.figure()
-    plt.plot(time, X_posterior_array, 'ro', alpha=0.2)
-    plt.plot(time, X_prior_array, 'ko', alpha=0.2)
-    plt.plot(time, X_hat_fusion, 'bo', alpha=0.2)
+    plt.plot(time, X_posterior_array, 'ro', label='x posterior', alpha=0.5)
+    plt.plot(time, X_prior_array, 'ko', label='x prior', alpha=0.5)
+    plt.plot(time, X_hat_fusion, 'bo', label='x sensor fusion', alpha=0.5)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Range (m)')
+    plt.title('Kalman Filter Estimation Model') 
+    plt.legend()
 
     #plt.figure()
     #plt.plot(time, K_gain_array)
