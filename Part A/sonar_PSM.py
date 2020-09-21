@@ -256,25 +256,25 @@ def calibration():
 
     plt.show()
     # Calculate linear motion functions h(x)
-    #sonar1_h_x = kS1[0] + kS1[1] * np.array(fil_values_sonar1)
-    #sonar2_h_x = kS2[0] + kS2[1] * np.array(fil_values_sonar2)
+    sonar1_h_x = kS1[0] + kS1[1] * np.array(fil_values_sonar1)
+    sonar2_h_x = kS2[0] + kS2[1] * np.array(fil_values_sonar2)
 
-    sonar1_h_x = kS1[0] + kS1[1] * np.array(sonar1)
-    sonar2_h_x = kS2[0] + kS2[1] * np.array(sonar2)
+    #sonar1_h_x = kS1[0] + kS1[1] * np.array(sonar1)
+    #sonar2_h_x = kS2[0] + kS2[1] * np.array(sonar2)
 
-    #f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range, varV_S1, varV_S2 = error_PDF(fil_range_sonar1, fil_range_sonar2, sonar1_h_x, sonar2_h_x)
-    f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range, varV_S1, varV_S2 = error_PDF(range_, range_, sonar1_h_x, sonar2_h_x)
+    f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range, varV_S1, varV_S2 = error_PDF(fil_range_sonar1, fil_range_sonar2, sonar1_h_x, sonar2_h_x)
+    #f_v_sonar1_plot, f_v_sonar2_plot, f_v_sonar1, f_v_sonar2, x_range, varV_S1, varV_S2 = error_PDF(range_, range_, sonar1_h_x, sonar2_h_x)
 
     determined_z_1, determined_z_2 = approximate(sonar1_h_x, sonar2_h_x, f_v_sonar1, f_v_sonar2, kS1, kS2)
 
-    #plotting(fil_range_sonar1, fil_range_sonar2, fil_time_sonar1, fil_time_sonar2, sonar1_h_x, sonar2_h_x, f_v_sonar1_plot, f_v_sonar2_plot, time, range_, sonar1, determined_z_1, determined_z_2, x_range)
+    plotting(fil_range_sonar1, fil_range_sonar2, fil_time_sonar1, fil_time_sonar2, sonar1_h_x, sonar2_h_x, f_v_sonar1_plot, f_v_sonar2_plot, time, range_, sonar1, determined_z_1, determined_z_2, x_range)
     #plotting(range_, range_, time, time, sonar1_h_x, sonar2_h_x, f_v_sonar1_plot, f_v_sonar2_plot, time, range_, sonar1, determined_z_1, determined_z_2, x_range)
     return  varV_S1, varV_S2, kS1, kS2
     
 
 
 
-#calibration()
+calibration()
 
 ######################################## Run the main func.########################################
 

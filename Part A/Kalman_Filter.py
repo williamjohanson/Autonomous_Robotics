@@ -54,27 +54,24 @@ def Kalman_Filter():
         x_prior, P_prior = calculate_Prior(zMM, x_prev, k, var_V)
         X_prior_array.append(x_prior)
 
-        #varV_IR3 = varV_IR3_const 
-        #varV_S1 = varV_S1_const 
-        #varV_S2 = varV_S2_const 
+        varV_IR3 = varV_IR3_const 
+        varV_S1 = varV_S1_const 
+        varV_S2 = varV_S2_const 
         zIR = raw_ir3[i]
         zS1 = sonar1[i]
         zS2 = sonar2[i]
 
-        #varV_IR, varV_S1, varV_S2 = Sensor_Fusion.adjust_variance(zIR, varV_IR3, zS1, varV_S1, zS2, varV_S2)
+        varV_IR, varV_S1, varV_S2 = Sensor_Fusion.adjust_variance(zIR, varV_IR3, zS1, varV_S1, zS2, varV_S2)
 
         xhat_fusion, P = Sensor_Fusion.fuseMLE_sensors(zIR, zS1, zS2, x0, kIR, kS1, kS2, varV_IR3, varV_S1, varV_S2)
         X_hat_fusion.append(xhat_fusion)
         x0 = float(xhat_fusion)
 
-        #print(P, P_prior, "wo")
-        #K_gain = 1/P /  (1/P + 1/P_prior)
-        #print(K_gain)
-        #K_gain_array.append(K_gain)
+        K_gain = 1/P /  (1/P + 1/P_prior)
 
-        #x_posterior = K_gain*x_prior + (1 - K_gain)*xhat_fusion 
-        x_posterior = 0.5*x_prior + (1 - 0.5)*xhat_fusion 
-        #x_posterior = x_prior
+        K_gain_array.append(K_gain)
+
+        x_posterior = K_gain*x_prior + (1 - K_gain)*xhat_fusion  
         X_posterior_array.append(x_posterior)
         x_prev = x_posterior
         t_prev = time[i]
@@ -88,8 +85,8 @@ def Kalman_Filter():
     plt.title('Kalman Filter Estimation Model') 
     plt.legend()
 
-    #plt.figure()
-    #plt.plot(time, K_gain_array)
+    plt.figure()
+    plt.plot(time, K_gain_array)
 
     plt.show()
 
